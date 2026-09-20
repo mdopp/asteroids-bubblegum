@@ -115,7 +115,6 @@ function createPlayer() {
     
     player = new THREE.Mesh(geometry, material);
     player.velocity = new THREE.Vector3(0, 0, 0);
-    player.rotation = new THREE.Euler(0, 0, 0);
     scene.add(player);
 }
 
