@@ -11,6 +11,13 @@ const COLORS = {
     uiText: '#5d4037'
 };
 
+const BUBBLE_COLORS = [
+    0xffb7d5, 0xb2f2bb, 0xd1d1ff, 0xffdac1,
+    0xc4b5fd, 0xfcd5ce, 0xfef08a, 0xa5f3fc,
+    0xfda4af, 0x86efac, 0xbbf7d0, 0xc7d2fe,
+    0x93c5fd, 0xfca5a5, 0xfdba74, 0xd9a0e0
+];
+
 // --- Game State ---
 let scene, camera, renderer, clock;
 let player = null;
@@ -32,6 +39,8 @@ const gameParams = {
 };
 
 let lastSpawnTime = 0;
+let bubbles = [];
+let bubbleSpawnTimer = 0;
 
 // --- Initialization ---
 function init() {
@@ -59,6 +68,9 @@ function init() {
 
     // Player
     createPlayer();
+
+    // Bubble pool
+    createBubbles(40);
 
     // Event Listeners
     window.addEventListener('mousedown', onInput);
@@ -115,6 +127,7 @@ function createPlayer() {
     
     player = new THREE.Mesh(geometry, material);
     player.velocity = new THREE.Vector3(0, 0, 0);
+    player.facing = new THREE.Vector3(0, 0, 1); // ship faces +Z by default
     scene.add(player);
 }
 
@@ -212,8 +225,10 @@ function animate() {
                 player.velocity.x = direction.x * speed;
                 player.velocity.z = direction.z * speed;
                 
+                // Face the direction of movement
                 const targetRotation = Math.atan2(direction.x, direction.z);
-                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, targetRotation, 0.1);
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, targetRotation, 0.12);
+                player.facing.set(Math.sin(player.rotation.z), 0, Math.cos(player.rotation.z)).normalize();
             }
         }
 
@@ -221,8 +236,9 @@ function animate() {
         player.velocity.multiplyScalar(gameParams.playerDrag);
         player.position.add(player.velocity);
 
-        // Simple "hover" effect
-        player.position.y = Math.sin(now * 0.005) * 0.2;
+        // Gentle "hover" effect
+        player.position.y = Math.sin(now * 0.003) * 0.15;
+        player.rotation.x = Math.sin(now * 0.002) * 0.05;
 
         // Spawn Asteroids
         if (now - lastSpawnTime > gameParams.asteroidSpawnRate) {
@@ -237,8 +253,7 @@ function animate() {
             const bullet = new THREE.Mesh(bGeom, bMat);
             bullet.position.copy(player.position);
             
-            const angle = player.rotation.z;
-            bullet.userData.velocity = new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle)).multiplyScalar(gameParams.bulletSpeed);
+            bullet.userData.velocity = player.facing.clone().multiplyScalar(gameParams.bulletSpeed);
             
             scene.add(bullet);
             bullets.push(bullet);
@@ -294,7 +309,63 @@ function animate() {
         }
     }
 
+    // Update bubbles
+    bubbleSpawnTimer += delta * 1000;
+    if (bubbleSpawnTimer > 800 && bubbles.length < 40) {
+        spawnBubble();
+        bubbleSpawnTimer = 0;
+    }
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        b.position.y += 0.015 * (1 + b.userData.wobbleSpeed);
+        b.position.x += Math.sin(now * 0.001 + b.userData.phase) * 0.01;
+        b.userData.scale = Math.min(1, b.userData.scale + 0.02);
+        b.scale.setScalar(b.userData.scale);
+        b.rotation.x += 0.01;
+        b.rotation.y += 0.015;
+        b.material.opacity = Math.max(0, b.userData.opacity - 0.003);
+        
+        if (b.position.y > 20 || b.userData.opacity <= 0) {
+            scene.remove(b);
+            bubbles.splice(i, 1);
+        }
+    }
+
     renderer.render(scene, camera);
+}
+
+function createBubbles(count) {
+    for (let i = 0; i < count; i++) {
+        spawnBubble(true);
+    }
+}
+
+function spawnBubble(initial = false) {
+    const size = Math.random() * 0.4 + 0.15;
+    const geom = new THREE.SphereGeometry(size, 8, 8);
+    const color = BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)];
+    const mat = new THREE.MeshStandardMaterial({
+        color: color,
+        transparent: true,
+        opacity: 0.5,
+        roughness: 0.1,
+        metalness: 0.05
+    });
+    const bubble = new THREE.Mesh(geom, mat);
+    bubble.position.set(
+        (Math.random() - 0.5) * 30,
+        initial ? Math.random() * 20 : -2,
+        (Math.random() - 0.5) * 30
+    );
+    bubble.userData = {
+        wobbleSpeed: Math.random() * 2 + 0.5,
+        phase: Math.random() * Math.PI * 2,
+        scale: 0,
+        opacity: 0.3 + Math.random() * 0.4
+    };
+    bubble.scale.setScalar(0);
+    scene.add(bubble);
+    bubbles.push(bubble);
 }
 
 init();

@@ -1,0 +1,24 @@
+{
+  "name": "asteroids-bubblegum",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdopp/asteroids-bubblegum.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mdopp/asteroids-bubblegum/issues"
+  },
+  "homepage": "https://github.com/mdopp/asteroids-bubblegum#readme",
+  "dependencies": {
+    "playwright": "^1.63.0"
+  }
+}
