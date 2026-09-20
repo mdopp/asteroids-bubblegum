@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: asteroids-bubblegum
+  annotations:
+    servicebay.label: "Asteroids Bubblegum"
+    servicebay.ports: "{{ASTERIODS_PORT}}/tcp"
+    servicebay.schema-version: "1"
+    servicebay.dependencies: ""
+    servicebay.healthcheck: "http://host.containers.internal:{{ASTERIODS_PORT}}/health"
+spec:
+  containers:
+    - name: asteroids
+      image: ghcr.io/mdopp/asteroids-bubblegum:latest
+      ports:
+        - containerPort: 8080
+          hostPort: 8080
+          protocol: TCP
+      resources:
+        limits:
+          memory: "128Mi"
+          cpu: "250m"

@@ -1,0 +1,23 @@
+{
+  "ASTERIODS_PORT": {
+    "type": "port",
+    "default": "8080",
+    "exposure": "host"
+  },
+  "ASTERIODS_SUBDOMAIN": {
+    "type": "subdomain",
+    "default": "asteroids",
+    "exposure": "public",
+    "proxyPort": "ASTERIODS_PORT",
+    "proxyConfig": {
+      "block_exploits": true,
+      "ssl_forced": true,
+      "advanced_config": "__authelia_forward_auth__"
+    }
+  },
+  "ASTERIODS_PUBLIC_DOMAIN": {
+    "type": "string",
+    "default": "{{PUBLIC_DOMAIN}}",
+    "exposure": "env"
+  }
+}
